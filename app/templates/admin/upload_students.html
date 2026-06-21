@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Upload Students{% endblock %}
+{% block page_title %}Upload Students{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('admin.students') }}" class="nav-link active"><i class="bi bi-people"></i> Students</a>
+<a href="{{ url_for('admin.lecturers') }}" class="nav-link"><i class="bi bi-person-badge"></i> Lecturers</a>
+<a href="{{ url_for('admin.courses') }}" class="nav-link"><i class="bi bi-book"></i> Courses</a>
+<a href="{{ url_for('admin.reports') }}" class="nav-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+<a href="{{ url_for('admin.model_metrics') }}" class="nav-link"><i class="bi bi-cpu"></i> ML Model</a>
+<a href="{{ url_for('admin.notifications') }}" class="nav-link"><i class="bi bi-bell"></i> Notifications</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card p-4">
+      <h5 class="mb-2">Bulk Upload Students</h5>
+      <p class="text-muted small mb-4">Upload a CSV or Excel file with student data. Default password is the student's matric number.</p>
+
+      <div class="alert alert-info small mb-4">
+        <strong>Required Columns:</strong> matric_number, full_name, department, level, gender<br />
+        <strong>Optional:</strong> email, faculty
+      </div>
+
+      <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="mb-3">
+          <label class="form-label">Select File</label>
+          <input type="file" name="file" class="form-control" accept=".csv,.xlsx,.xls" required />
+        </div>
+        <div class="d-flex gap-2 justify-content-end">
+          <a href="{{ url_for('admin.students') }}" class="btn btn-light">Cancel</a>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

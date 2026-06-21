@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}My Records{% endblock %}
+{% block page_title %}My Academic Records{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('student.dashboard') }}" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('student.records') }}" class="nav-link active"><i class="bi bi-journal-text"></i> My Records</a>
+<a href="{{ url_for('student.performance_history') }}" class="nav-link"><i class="bi bi-graph-up"></i> Performance History</a>
+<a href="{{ url_for('student.notifications') }}" class="nav-link"><i class="bi bi-bell"></i> Notifications</a>
+{% endblock %}
+
+{% block content %}
+<h5 class="mb-4">My Academic Records</h5>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Course</th><th>Semester</th><th>Session</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th><th>Attend %</th></tr>
+      </thead>
+      <tbody>
+      {% for rec in records %}
+      <tr>
+        <td><strong>{{ rec.course.code if rec.course else '—' }}</strong><br><small class="text-muted">{{ rec.course.name if rec.course else '' }}</small></td>
+        <td>{{ rec.semester }}</td>
+        <td>{{ rec.session }}</td>
+        <td>{{ rec.ca_score or '—' }}</td>
+        <td>{{ rec.exam_score or '—' }}</td>
+        <td class="fw-semibold">{{ rec.total_score or '—' }}</td>
+        <td><span class="badge {% if rec.grade == 'A' %}bg-success{% elif rec.grade == 'B' %}bg-primary{% elif rec.grade in ('C','D') %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ rec.grade or '—' }}</span></td>
+        <td>{{ '%.0f'|format(rec.attendance_percentage) if rec.attendance_percentage else '—' }}%</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="text-muted text-center py-5">No academic records on file.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

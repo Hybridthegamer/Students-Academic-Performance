@@ -1,0 +1,13 @@
+{
+  "accuracy": 0.9975,
+  "macro_f1": 0.9959,
+  "best_params": {
+    "max_depth": 15,
+    "min_samples_leaf": 3,
+    "min_samples_split": 10,
+    "n_estimators": 200
+  },
+  "classification_report": "              precision    recall  f1-score   support\n\n     At-Risk       1.00      1.00      1.00       168\n     Average       1.00      1.00      1.00        98\n        Good       0.98      1.00      0.99        46\n   Excellent       1.00      0.99      0.99        88\n\n    accuracy                           1.00       400\n   macro avg       0.99      1.00      1.00       400\nweighted avg       1.00      1.00      1.00       400\n",
+  "n_train": 1600,
+  "n_test": 400
+}

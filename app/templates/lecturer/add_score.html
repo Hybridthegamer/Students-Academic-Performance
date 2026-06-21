@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Enter Scores{% endblock %}
+{% block page_title %}Enter Scores{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('lecturer.dashboard') }}" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('lecturer.students') }}" class="nav-link"><i class="bi bi-people"></i> My Students</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card p-4">
+      <h5 class="mb-1">Enter Student Score</h5>
+      <p class="text-muted small mb-4">Course: <strong>{{ course.code }} — {{ course.name }}</strong></p>
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Student *</label>
+            <select name="student_id" class="form-select" required>
+              <option value="">Select student</option>
+              {% for s in students %}
+              <option value="{{ s.id }}">{{ s.user.full_name }} ({{ s.matric_number }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">CA Score (max 30)</label>
+            <input type="number" name="ca_score" class="form-control" min="0" max="30" step="0.5" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Exam Score (max 70)</label>
+            <input type="number" name="exam_score" class="form-control" min="0" max="70" step="0.5" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Attendance %</label>
+            <input type="number" name="attendance_percentage" class="form-control" min="0" max="100" value="75" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Semester *</label>
+            <select name="semester" class="form-select" required>
+              <option value="First">First</option><option value="Second">Second</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Session *</label>
+            <input type="text" name="session" class="form-control" placeholder="2023/2024" required />
+          </div>
+          <div class="col-12 d-flex gap-2 justify-content-end">
+            <a href="{{ url_for('lecturer.course_detail', course_id=course.id) }}" class="btn btn-light">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Score</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

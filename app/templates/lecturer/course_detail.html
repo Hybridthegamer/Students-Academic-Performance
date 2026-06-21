@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.code }}{% endblock %}
+{% block page_title %}{{ course.code }} — {{ course.name }}{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('lecturer.dashboard') }}" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('lecturer.students') }}" class="nav-link"><i class="bi bi-people"></i> My Students</a>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-4">
+  <div>
+    <h5 class="mb-0">{{ course.code }}: {{ course.name }}</h5>
+    <small class="text-muted">{{ course.semester }} Semester · {{ course.session }} · {{ course.credit_units }} credit units</small>
+  </div>
+  <a href="{{ url_for('lecturer.add_score', course_id=course.id) }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus me-1"></i>Enter Scores
+  </a>
+</div>
+
+<div class="row g-3 mb-3">
+  {% for grade, count in grade_dist.items() %}
+  <div class="col-sm-3">
+    <div class="stat-card"><div class="text-muted small">Grade {{ grade }}</div><div class="fs-4 fw-bold">{{ count }}</div></div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card p-3">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr><th>Student</th><th>Matric</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th><th>Attend %</th></tr>
+      </thead>
+      <tbody>
+      {% for rec in records %}
+      <tr>
+        <td>{{ rec.student.user.full_name }}</td>
+        <td><small>{{ rec.student.matric_number }}</small></td>
+        <td>{{ rec.ca_score or '—' }}</td>
+        <td>{{ rec.exam_score or '—' }}</td>
+        <td class="fw-semibold">{{ rec.total_score or '—' }}</td>
+        <td><span class="badge {% if rec.grade == 'A' %}bg-success{% elif rec.grade == 'B' %}bg-primary{% elif rec.grade in ('C','D') %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ rec.grade or 'N/A' }}</span></td>
+        <td>{{ '%.0f'|format(rec.attendance_percentage) if rec.attendance_percentage else '—' }}%</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted text-center py-4">No records yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

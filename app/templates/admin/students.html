@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Students{% endblock %}
+{% block page_title %}Student Management{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('admin.students') }}" class="nav-link active"><i class="bi bi-people"></i> Students</a>
+<a href="{{ url_for('admin.lecturers') }}" class="nav-link"><i class="bi bi-person-badge"></i> Lecturers</a>
+<a href="{{ url_for('admin.courses') }}" class="nav-link"><i class="bi bi-book"></i> Courses</a>
+<a href="{{ url_for('admin.reports') }}" class="nav-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+<a href="{{ url_for('admin.model_metrics') }}" class="nav-link"><i class="bi bi-cpu"></i> ML Model</a>
+<a href="{{ url_for('admin.notifications') }}" class="nav-link"><i class="bi bi-bell"></i> Notifications</a>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="mb-0">All Students</h5>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin.upload_students') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-upload me-1"></i>Upload CSV
+    </a>
+    <a href="{{ url_for('admin.add_student') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus me-1"></i>Add Student
+    </a>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card p-3 mb-3">
+  <form method="GET" class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <input type="text" name="search" value="{{ search }}" class="form-control form-control-sm" placeholder="Search name or matric number…" />
+    </div>
+    <div class="col-md-4">
+      <select name="department" class="form-select form-select-sm">
+        <option value="">All Departments</option>
+        {% for d in departments %}<option value="{{ d }}" {% if d == dept %}selected{% endif %}>{{ d }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Name</th><th>Matric No.</th><th>Dept</th><th>Level</th>
+          <th>Gender</th><th>Latest Classification</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for s in students.items %}
+      {% set latest = s.performance_results.order_by(none).order_by('-evaluated_at').first() %}
+      <tr>
+        <td class="fw-semibold">{{ s.user.full_name }}</td>
+        <td><small class="text-muted">{{ s.matric_number }}</small></td>
+        <td><small>{{ s.department }}</small></td>
+        <td>{{ s.level }}</td>
+        <td>{{ s.gender }}</td>
+        <td>
+          {% set r = s.performance_results.order_by(none) %}
+          {% set latest_r = s.performance_results.order_by('-evaluated_at').first() if s.performance_results else none %}
+          {% if latest_r %}
+            {% set cls = latest_r.classification %}
+            {% if cls == 'Excellent' %}<span class="badge bg-success">{{ cls }}</span>
+            {% elif cls == 'Good' %}<span class="badge bg-primary">{{ cls }}</span>
+            {% elif cls == 'Average' %}<span class="badge bg-warning text-dark">{{ cls }}</span>
+            {% else %}<span class="badge bg-danger">{{ cls }}</span>{% endif %}
+          {% else %}
+            <span class="badge bg-secondary">Not Evaluated</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{{ url_for('admin.view_student', student_id=s.id) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
+            <i class="bi bi-eye"></i> View
+          </a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-center text-muted py-4">No students found.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if students.pages > 1 %}
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <small class="text-muted">Showing {{ students.items|length }} of {{ students.total }}</small>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% for page_num in students.iter_pages() %}
+          {% if page_num %}
+          <li class="page-item {% if page_num == students.page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('admin.students', page=page_num, search=search, department=dept) }}">{{ page_num }}</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
