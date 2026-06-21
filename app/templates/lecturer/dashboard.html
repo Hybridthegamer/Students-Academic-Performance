@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Lecturer Dashboard{% endblock %}
+{% block page_title %}Lecturer Dashboard{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('lecturer.dashboard') }}" class="nav-link active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('lecturer.students') }}" class="nav-link"><i class="bi bi-people"></i> My Students</a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="stat-card">
+      <div class="text-muted small">My Courses</div>
+      <div class="fs-3 fw-bold">{{ courses|length }}</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card info">
+      <div class="text-muted small">Total Enrolled</div>
+      <div class="fs-3 fw-bold">{{ total_enrolled }}</div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card danger">
+      <div class="text-muted small">At-Risk Students</div>
+      <div class="fs-3 fw-bold text-danger">{{ at_risk_count }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card p-3">
+  <h6 class="fw-semibold mb-3">My Courses</h6>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light"><tr><th>Code</th><th>Name</th><th>Semester</th><th>Session</th><th>Enrolment</th><th></th></tr></thead>
+      <tbody>
+      {% for c in courses %}
+      <tr>
+        <td class="fw-semibold">{{ c.code }}</td>
+        <td>{{ c.name }}</td>
+        <td>{{ c.semester }}</td>
+        <td>{{ c.session }}</td>
+        <td>{{ c.academic_records.count() }}</td>
+        <td><a href="{{ url_for('lecturer.course_detail', course_id=c.id) }}" class="btn btn-sm btn-outline-primary py-0">View</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted text-center py-4">No courses assigned.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

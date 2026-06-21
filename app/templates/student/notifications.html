@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}My Notifications{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('student.dashboard') }}" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('student.records') }}" class="nav-link"><i class="bi bi-journal-text"></i> My Records</a>
+<a href="{{ url_for('student.performance_history') }}" class="nav-link"><i class="bi bi-graph-up"></i> Performance History</a>
+<a href="{{ url_for('student.notifications') }}" class="nav-link active"><i class="bi bi-bell"></i> Notifications</a>
+{% endblock %}
+
+{% block content %}
+<h5 class="mb-4">Notifications</h5>
+<div class="card">
+  <div class="list-group list-group-flush">
+    {% for n in notifications %}
+    <div class="list-group-item">
+      <div class="d-flex gap-3">
+        <div class="mt-1">
+          {% if n.type == 'alert' %}<i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+          {% elif n.type == 'success' %}<i class="bi bi-check-circle-fill text-success fs-5"></i>
+          {% else %}<i class="bi bi-info-circle-fill text-info fs-5"></i>{% endif %}
+        </div>
+        <div>
+          <div class="fw-semibold">{{ n.title }}</div>
+          <div class="small text-muted">{{ n.message }}</div>
+          <div class="text-muted" style="font-size:.75rem;">{{ n.created_at.strftime('%d %b %Y %H:%M') }}</div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="list-group-item text-center text-muted py-5">No notifications.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

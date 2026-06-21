@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard{% endblock %}
+{% block page_title %}My Academic Dashboard{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('student.dashboard') }}" class="nav-link active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('student.records') }}" class="nav-link"><i class="bi bi-journal-text"></i> My Records</a>
+<a href="{{ url_for('student.performance_history') }}" class="nav-link"><i class="bi bi-graph-up"></i> Performance History</a>
+<a href="{{ url_for('student.notifications') }}" class="nav-link"><i class="bi bi-bell"></i> Notifications</a>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h5 class="mb-0">Welcome, {{ current_user.full_name }}</h5>
+  <small class="text-muted">{{ profile.matric_number }} · {{ profile.department }} · Level {{ profile.level }}</small>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card {% if latest_result %}{% if latest_result.classification == 'Excellent' %}success{% elif latest_result.classification == 'Good' %}{% elif latest_result.classification == 'Average' %}warning{% else %}danger{% endif %}{% endif %}">
+      <div class="text-muted small mb-1">My Classification</div>
+      <div class="fs-3 fw-bold">{% if latest_result %}{{ latest_result.classification }}{% else %}Pending{% endif %}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1">CGPA</div>
+      <div class="fs-3 fw-bold">{{ '%.2f'|format(aggregates.cgpa) if aggregates.cgpa else '—' }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card info">
+      <div class="text-muted small mb-1">Avg Attendance</div>
+      <div class="fs-3 fw-bold">{{ '%.1f'|format(aggregates.attendance) if aggregates.attendance else '—' }}%</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1">Courses Taken</div>
+      <div class="fs-3 fw-bold">{{ aggregates.courses_count }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- SHAP Explanation -->
+  {% if shap_data %}
+  <div class="col-lg-5">
+    <div class="card p-3">
+      <h6 class="fw-semibold mb-1"><i class="bi bi-lightbulb me-2"></i>What's Affecting My Score?</h6>
+      <small class="text-muted d-block mb-3">Factors contributing to your "{{ latest_result.classification }}" classification.</small>
+      {% set max_abs = namespace(val=0.0001) %}
+      {% for k, v in shap_data.items() %}{% if v|abs > max_abs.val %}{% set max_abs.val = v|abs %}{% endif %}{% endfor %}
+      {% for feature, value in shap_data.items() %}
+      <div class="mb-2">
+        <div class="d-flex justify-content-between small mb-1">
+          <span>{{ feature }}</span>
+          <span class="{% if value > 0 %}text-success{% else %}text-danger{% endif %}">
+            {% if value > 0 %}+Positive{% else %}−Needs Work{% endif %}
+          </span>
+        </div>
+        <div class="bg-light rounded" style="height:10px;">
+          <div class="shap-bar {% if value > 0 %}bg-success{% else %}bg-danger{% endif %}"
+               style="width: {{ [((value|abs / max_abs.val) * 100)|int, 100]|min }}%;"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recent Records -->
+  <div class="{% if shap_data %}col-lg-7{% else %}col-12{% endif %}">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between mb-3">
+        <h6 class="fw-semibold mb-0">Recent Academic Records</h6>
+        <a href="{{ url_for('student.records') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead class="table-light"><tr><th>Course</th><th>CA</th><th>Exam</th><th>Total</th><th>Grade</th></tr></thead>
+          <tbody>
+          {% for rec in recent_records %}
+          <tr>
+            <td><small>{{ rec.course.code if rec.course else '—' }} ({{ rec.semester[:1] }}{{ rec.session[-2:] }})</small></td>
+            <td>{{ rec.ca_score or '—' }}</td>
+            <td>{{ rec.exam_score or '—' }}</td>
+            <td class="fw-semibold">{{ rec.total_score or '—' }}</td>
+            <td><span class="badge {% if rec.grade == 'A' %}bg-success{% elif rec.grade == 'B' %}bg-primary{% elif rec.grade in ('C','D') %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ rec.grade or '—' }}</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-muted text-center py-3">No records available yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if latest_result and latest_result.classification == 'At-Risk' %}
+<div class="alert alert-danger mt-3 d-flex align-items-center gap-3">
+  <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+  <div>
+    <strong>Academic Alert:</strong> You have been classified as <strong>At-Risk</strong> with a risk probability of
+    {{ '%.1f'|format(latest_result.risk_probability * 100) }}%. Please contact your academic advisor immediately
+    for guidance and support.
+  </div>
+</div>
+{% endif %}
+{% endblock %}

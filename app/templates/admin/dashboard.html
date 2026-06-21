@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('admin.dashboard') }}" class="nav-link active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('admin.students') }}" class="nav-link"><i class="bi bi-people"></i> Students</a>
+<a href="{{ url_for('admin.lecturers') }}" class="nav-link"><i class="bi bi-person-badge"></i> Lecturers</a>
+<a href="{{ url_for('admin.courses') }}" class="nav-link"><i class="bi bi-book"></i> Courses</a>
+<a href="{{ url_for('admin.reports') }}" class="nav-link"><i class="bi bi-bar-chart-line"></i> Reports</a>
+<a href="{{ url_for('admin.model_metrics') }}" class="nav-link"><i class="bi bi-cpu"></i> ML Model</a>
+<a href="{{ url_for('admin.notifications') }}" class="nav-link"><i class="bi bi-bell"></i> Notifications
+  {% if unread > 0 %}<span class="badge bg-danger ms-1">{{ unread }}</span>{% endif %}
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="text-muted small mb-1">Total Students</div>
+      <div class="fs-3 fw-bold">{{ total_students }}</div>
+      <i class="bi bi-people text-muted"></i>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card info">
+      <div class="text-muted small mb-1">Lecturers</div>
+      <div class="fs-3 fw-bold">{{ total_lecturers }}</div>
+      <i class="bi bi-person-badge text-muted"></i>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card success">
+      <div class="text-muted small mb-1">Courses</div>
+      <div class="fs-3 fw-bold">{{ total_courses }}</div>
+      <i class="bi bi-book text-muted"></i>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card danger">
+      <div class="text-muted small mb-1">At-Risk Students</div>
+      <div class="fs-3 fw-bold text-danger">{{ classification_counts['At-Risk'] }}</div>
+      <i class="bi bi-exclamation-triangle text-danger"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Actions -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card p-3 d-flex flex-row align-items-center justify-content-between">
+      <div>
+        <div class="fw-semibold">ML Model Status</div>
+        <small class="text-muted">Random Forest Classifier</small>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        {% if model_ready %}
+        <span class="badge bg-success">Ready</span>
+        {% else %}
+        <span class="badge bg-secondary">Not Trained</span>
+        {% endif %}
+        <form method="POST" action="{{ url_for('admin.train_model') }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-repeat me-1"></i>Train Model
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3 d-flex flex-row align-items-center justify-content-between">
+      <div>
+        <div class="fw-semibold">Batch Evaluation</div>
+        <small class="text-muted">Evaluate all students at once</small>
+      </div>
+      <form method="POST" action="{{ url_for('admin.evaluate_all') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button class="btn btn-sm btn-primary" {% if not model_ready %}disabled{% endif %}>
+          <i class="bi bi-play-circle me-1"></i>Run Evaluation
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Distribution Chart -->
+  <div class="col-lg-5">
+    <div class="card p-3">
+      <h6 class="fw-semibold mb-3">Performance Distribution</h6>
+      <canvas id="distChart" height="240"></canvas>
+    </div>
+  </div>
+
+  <!-- At-Risk Students -->
+  <div class="col-lg-7">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-semibold mb-0">Recent At-Risk Students</h6>
+        <a href="{{ url_for('admin.students') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+          <thead class="table-light"><tr>
+            <th>Name</th><th>Matric</th><th>Department</th><th>Risk %</th><th></th>
+          </tr></thead>
+          <tbody>
+          {% for r in at_risk %}
+          <tr>
+            <td>{{ r.student.user.full_name }}</td>
+            <td><small>{{ r.student.matric_number }}</small></td>
+            <td><small>{{ r.student.department }}</small></td>
+            <td><span class="badge bg-danger">{{ '%.0f'|format(r.risk_probability * 100) }}%</span></td>
+            <td>
+              <a href="{{ url_for('admin.view_student', student_id=r.student.id) }}" class="btn btn-xs btn-outline-primary btn-sm py-0 px-2">View</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-muted text-center py-3">No at-risk students found.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const ctx = document.getElementById('distChart');
+new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: ['At-Risk', 'Average', 'Good', 'Excellent'],
+    datasets: [{
+      data: [
+        {{ classification_counts['At-Risk'] }},
+        {{ classification_counts['Average'] }},
+        {{ classification_counts['Good'] }},
+        {{ classification_counts['Excellent'] }}
+      ],
+      backgroundColor: ['#dc3545','#ffc107','#0d6efd','#198754'],
+      borderWidth: 0,
+    }]
+  },
+  options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+});
+</script>
+{% endblock %}

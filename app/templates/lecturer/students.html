@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}My Students{% endblock %}
+{% block page_title %}My Students{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('lecturer.dashboard') }}" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+<a href="{{ url_for('lecturer.students') }}" class="nav-link active"><i class="bi bi-people"></i> My Students</a>
+{% endblock %}
+
+{% block content %}
+<h5 class="mb-4">My Students</h5>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light"><tr><th>Name</th><th>Matric</th><th>Department</th><th>Level</th><th>Classification</th><th></th></tr></thead>
+      <tbody>
+      {% for s in students %}
+      {% set lr = s.performance_results.order_by(none) %}
+      <tr>
+        <td class="fw-semibold">{{ s.user.full_name }}</td>
+        <td><small>{{ s.matric_number }}</small></td>
+        <td>{{ s.department }}</td>
+        <td>{{ s.level }}</td>
+        <td>
+          {% set latest_r = s.performance_results.order_by('-evaluated_at').first() if s.performance_results else none %}
+          {% if latest_r %}
+            {% if latest_r.classification == 'Excellent' %}<span class="badge bg-success">Excellent</span>
+            {% elif latest_r.classification == 'Good' %}<span class="badge bg-primary">Good</span>
+            {% elif latest_r.classification == 'Average' %}<span class="badge bg-warning text-dark">Average</span>
+            {% else %}<span class="badge bg-danger">At-Risk</span>{% endif %}
+          {% else %}<span class="badge bg-secondary">—</span>{% endif %}
+        </td>
+        <td><a href="{{ url_for('lecturer.view_student', student_id=s.id) }}" class="btn btn-sm btn-outline-primary py-0">View</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted text-center py-4">No students enrolled in your courses yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
