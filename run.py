@@ -40,4 +40,15 @@ def train_model():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    import sys
+    if sys.platform == 'win32':
+        # waitress is a production-grade pure-Python WSGI server for Windows
+        # (gunicorn does not support Windows)
+        try:
+            from waitress import serve
+            print('Starting SAPES on http://localhost:5000 (waitress)')
+            serve(app, host='0.0.0.0', port=5000)
+        except ImportError:
+            app.run(host='0.0.0.0', port=5000, debug=True)
+    else:
+        app.run(host='0.0.0.0', port=5000, debug=True)
