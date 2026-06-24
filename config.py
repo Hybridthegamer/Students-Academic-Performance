@@ -1,8 +1,22 @@
 import os
+import sys
 from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _mysql_url(raw_url: str) -> str:
+    """
+    Rewrite a mysql:// or mysql+mysqlclient:// URL to use PyMySQL on Windows
+    so no C compiler or MySQL client libraries are needed.
+    """
+    if sys.platform == 'win32' and raw_url.startswith('mysql'):
+        if raw_url.startswith('mysql+mysqlclient://'):
+            raw_url = raw_url.replace('mysql+mysqlclient://', 'mysql+pymysql://', 1)
+        elif raw_url.startswith('mysql://'):
+            raw_url = raw_url.replace('mysql://', 'mysql+pymysql://', 1)
+    return raw_url
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -49,16 +63,16 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
+    SQLALCHEMY_DATABASE_URI = _mysql_url(os.environ.get(
         'DATABASE_URL',
         'sqlite:///' + os.path.join(BASE_DIR, 'sapes_dev.db')
-    )
+    ))
 
 
 class ProductionConfig(Config):
     DEBUG = False
     SESSION_COOKIE_SECURE = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '')
+    SQLALCHEMY_DATABASE_URI = _mysql_url(os.environ.get('DATABASE_URL', ''))
 
 
 class TestingConfig(Config):
